@@ -112,7 +112,7 @@
       </div>
     </section>
 
-    <!-- 借入残高カード & 個別目標付きボス討伐リスト -->
+    <!-- 借入残高カード & ボス討伐リスト（個別返済機能付き） -->
     <section class="mb-5 p-4 boss-card rounded-xl border border-slate-700 shadow-xl" id="balanceCard">
       <div class="flex justify-between items-center mb-1">
         <div class="text-xs text-slate-400 font-bold">👾 敵軍総戦力（総残高）</div>
@@ -120,31 +120,31 @@
       </div>
       <div class="text-3xl font-extrabold tracking-tight text-white mb-4 font-mono" id="totalDebtBalance">¥0</div>
 
-      <div class="text-[11px] font-semibold text-slate-400 mb-2 border-b border-slate-700 pb-1">交戦中のボス（個別目標＆ステータス）</div>
+      <div class="text-[11px] font-semibold text-slate-400 mb-2 border-b border-slate-700 pb-1">交戦中のボス（各カードから直接返済可能）</div>
       <div id="debtPriorityList" class="space-y-3"></div>
     </section>
 
-    <!-- 収支 / 即時返済アクション -->
+    <!-- 収支 / 即時返済アクション（金額微調整機能付き） -->
     <section class="mb-6 p-4 bg-emerald-950/20 border border-emerald-500/30 rounded-xl">
       <div class="flex gap-2 mb-3">
-        <button onclick="switchTab('income')" id="tabIncome" class="flex-1 py-2 text-xs font-bold rounded-lg bg-emerald-600 text-white shadow-lg">💰 攻撃（入金・返済）</button>
+        <button onclick="switchTab('income')" id="tabIncome" class="flex-1 py-2 text-xs font-bold rounded-lg bg-emerald-600 text-white shadow-lg">💰 攻撃（入金・一斉返済）</button>
         <button onclick="switchTab('expense')" id="tabExpense" class="flex-1 py-2 text-xs font-bold rounded-lg bg-slate-800 text-slate-400">生活費</button>
       </div>
 
       <div id="incomeForm" class="space-y-2">
         <div class="flex gap-2">
           <input type="number" id="incomeInput" placeholder="給与・臨時収入 (円)" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-emerald-500">
-          <button onclick="calcAllocation()" class="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black px-3 py-2 rounded-lg text-xs shrink-0">配分計算</button>
+          <button onclick="calcAllocation()" class="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black px-3 py-2 rounded-lg text-xs shrink-0 shadow-[0_0_10px_rgba(16,185,129,0.3)]">配分計算</button>
         </div>
 
         <div id="allocationPreview" class="hidden p-3 bg-slate-900 rounded-lg border border-slate-600 text-xs mt-3 shadow-inner">
-          <div class="font-bold text-emerald-400 mb-2 border-b border-slate-700 pb-1 flex justify-between items-center">
-            <span>⚔️ 最適化された攻撃陣形</span>
-            <span id="warpMessage" class="text-amber-400 text-[10px] animate-pulse hidden"></span>
+          <div class="font-bold text-emerald-400 mb-1 flex justify-between items-center">
+            <span>⚔️ 返済配分プラン（金額は手動で変更可能）</span>
           </div>
+          <p class="text-[9px] text-slate-400 mb-2">※実際に振り込む金額に合わせて数字を書き換えてください。</p>
           <div id="allocationItems" class="space-y-2 text-slate-300 mb-3"></div>
           <button onclick="commitPayment()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3 rounded-lg shadow-lg text-sm transition transform active:scale-95">
-            一斉攻撃を実行した（残高を減らす）
+            入力した金額で返済を実行する
           </button>
         </div>
       </div>
@@ -168,14 +168,32 @@
     </section>
   </div>
 
-  <!-- モーダル: 設定＆個別目標修正 -->
+  <!-- モーダル1: 個別直接返済モーダル -->
+  <div id="directPayModal" class="fixed inset-0 bg-black/90 flex items-center justify-center p-4 hidden z-50">
+    <div class="bg-slate-900 p-5 rounded-xl max-w-sm w-full border border-emerald-500 text-xs shadow-2xl">
+      <div class="flex justify-between items-center mb-2">
+        <h3 class="font-bold text-sm text-emerald-400" id="directPayTitle">直接返済</h3>
+        <button onclick="toggleDirectPayModal(false)" class="text-slate-400 text-lg">✕</button>
+      </div>
+      <p class="text-[11px] text-slate-300 mb-3" id="directPayInfo">現在の残高: ¥0</p>
+      <div class="mb-4">
+        <label class="block text-slate-400 mb-1">実際に返済した金額 (円)</label>
+        <input type="number" id="directPayAmount" placeholder="例: 15000" class="w-full bg-slate-800 border border-slate-600 rounded p-2 text-white text-sm font-bold">
+      </div>
+      <div class="flex justify-end gap-2">
+        <button onclick="toggleDirectPayModal(false)" class="px-3 py-2 text-slate-400">キャンセル</button>
+        <button onclick="commitDirectPay()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded shadow">返済を反映する</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- モーダル2: 設定＆個別目標修正 -->
   <div id="settingsModal" class="fixed inset-0 bg-black/90 flex items-center justify-center p-4 hidden z-50">
     <div class="bg-slate-900 p-5 rounded-xl max-w-sm w-full border border-slate-700 text-xs shadow-2xl">
       <div class="flex justify-between items-center mb-3">
         <h3 class="font-bold text-sm text-white">⚙️ 目標設定・ステータス編集</h3>
         <button onclick="toggleSettingsModal(false)" class="text-slate-400 text-lg">✕</button>
       </div>
-      
       <div class="mb-3 bg-slate-800 p-3 rounded-lg border border-slate-700 space-y-2">
         <div>
           <label class="block text-amber-400 mb-1 font-bold">🏁 全体完全完済の目標月</label>
@@ -189,17 +207,15 @@
           </div>
         </div>
       </div>
-
       <div class="text-[11px] text-emerald-400 font-bold mb-2">各ボスの個別目標＆残高設定</div>
       <div class="space-y-3 max-h-[42vh] overflow-y-auto pr-1" id="debtEditFields"></div>
-
       <div class="mt-4">
         <button onclick="saveSettings()" class="w-full py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-lg shadow-lg">設定を保存して更新</button>
       </div>
     </div>
   </div>
 
-  <!-- 緊急冷却モーダル -->
+  <!-- モーダル3: 緊急冷却 -->
   <div id="coolingModal" class="fixed inset-0 bg-black/95 flex items-center justify-center p-4 hidden z-[60]">
     <div class="bg-slate-900 border-2 border-rose-600 p-6 rounded-2xl max-w-sm w-full text-center shadow-[0_0_40px_rgba(225,29,72,0.3)]">
       <div class="text-5xl mb-3 animate-pulse">🛑</div>
@@ -214,7 +230,7 @@
     </div>
   </div>
 
-  <!-- 再借入モーダル -->
+  <!-- モーダル4: 再借入 -->
   <div id="borrowModal" class="fixed inset-0 bg-black/90 flex items-center justify-center p-4 hidden z-50">
     <div class="bg-slate-900 border-2 border-rose-600 p-5 rounded-xl max-w-sm w-full text-xs">
       <h3 class="font-black text-base text-rose-500 mb-2">⚠️ 痛恨の被弾（再借入）</h3>
@@ -244,7 +260,6 @@
       "勝率の低いギャンブルに「取り返す」という言葉は存在しない。"
     ];
 
-    // 初期データ（各枠に targetMonth: 'YYYY-MM' を追加）
     const initialDebts = [
       { id: 'famima_cash', name: 'ファミマカード (キャッシング)', balance: 50000, initialBalance: 50000, rate: 18.0, minPayment: 2000, targetMonth: '2026-10', url: 'https://ftcard.pocketcard.co.jp/', isCleared: false },
       { id: 'aeon_cash', name: 'イオン銀行 (キャッシング)', balance: 100000, initialBalance: 100000, rate: 18.0, minPayment: 3000, targetMonth: '2026-11', url: 'https://www.aeonbank.co.jp/', isCleared: false },
@@ -256,31 +271,31 @@
       { id: 'jibun', name: 'auじぶん銀行', balance: 50000, initialBalance: 50000, rate: 14.5, minPayment: 2000, targetMonth: '2027-09', url: 'https://www.jibunbank.co.jp/', isCleared: false }
     ];
 
-    let debts = JSON.parse(localStorage.getItem('app_debts_v9')) || initialDebts;
-    let savedInterestTotal = parseInt(localStorage.getItem('app_saved_interest_v9')) || 0;
-    let tsumoriLogs = JSON.parse(localStorage.getItem('app_tsumori_logs_v9')) || [];
-    let logs = JSON.parse(localStorage.getItem('app_logs_v9')) || [];
-    let noPachinkoStart = localStorage.getItem('app_streak_start_v9') || new Date().toISOString();
-    let reboundWarning = JSON.parse(localStorage.getItem('app_rebound_v9')) || false;
-    let paydaySetting = parseInt(localStorage.getItem('app_payday_v9')) || 25;
-    let targetDateSetting = localStorage.getItem('app_target_date_v9') || '2027-09';
-    let lastLockDate = localStorage.getItem('app_last_lock_v9') || '';
+    let debts = JSON.parse(localStorage.getItem('app_debts_v10')) || initialDebts;
+    let savedInterestTotal = parseInt(localStorage.getItem('app_saved_interest_v10')) || 0;
+    let tsumoriLogs = JSON.parse(localStorage.getItem('app_tsumori_logs_v10')) || [];
+    let logs = JSON.parse(localStorage.getItem('app_logs_v10')) || [];
+    let noPachinkoStart = localStorage.getItem('app_streak_start_v10') || new Date().toISOString();
+    let reboundWarning = JSON.parse(localStorage.getItem('app_rebound_v10')) || false;
+    let paydaySetting = parseInt(localStorage.getItem('app_payday_v10')) || 25;
+    let targetDateSetting = localStorage.getItem('app_target_date_v10') || '2027-09';
+    let lastLockDate = localStorage.getItem('app_last_lock_v10') || '';
 
-    let pendingAllocation = null;
+    let directPayTargetId = null;
     let timerInterval = null;
     let debtChartInstance = null;
     let budgetChartInstance = null;
 
     function saveStorage() {
-      localStorage.setItem('app_debts_v9', JSON.stringify(debts));
-      localStorage.setItem('app_saved_interest_v9', savedInterestTotal);
-      localStorage.setItem('app_tsumori_logs_v9', JSON.stringify(tsumoriLogs));
-      localStorage.setItem('app_logs_v9', JSON.stringify(logs));
-      localStorage.setItem('app_streak_start_v9', noPachinkoStart);
-      localStorage.setItem('app_rebound_v9', JSON.stringify(reboundWarning));
-      localStorage.setItem('app_payday_v9', paydaySetting);
-      localStorage.setItem('app_target_date_v9', targetDateSetting);
-      localStorage.setItem('app_last_lock_v9', lastLockDate);
+      localStorage.setItem('app_debts_v10', JSON.stringify(debts));
+      localStorage.setItem('app_saved_interest_v10', savedInterestTotal);
+      localStorage.setItem('app_tsumori_logs_v10', JSON.stringify(tsumoriLogs));
+      localStorage.setItem('app_logs_v10', JSON.stringify(logs));
+      localStorage.setItem('app_streak_start_v10', noPachinkoStart);
+      localStorage.setItem('app_rebound_v10', JSON.stringify(reboundWarning));
+      localStorage.setItem('app_payday_v10', paydaySetting);
+      localStorage.setItem('app_target_date_v10', targetDateSetting);
+      localStorage.setItem('app_last_lock_v10', lastLockDate);
       render();
     }
 
@@ -318,14 +333,12 @@
     function render() {
       const now = new Date();
 
-      // 禁パチ日数
       const start = new Date(noPachinkoStart);
       const diffDays = Math.floor(Math.abs(now - start) / (1000 * 60 * 60 * 24));
       document.getElementById('streakDays').innerText = diffDays;
 
       document.getElementById('savedInterestTotal').innerText = `+¥${savedInterestTotal.toLocaleString()}`;
 
-      // つもり貯金
       const tsumoriTotal = tsumoriLogs.reduce((sum, item) => sum + item.amount, 0);
       document.getElementById('tsumoriTotal').innerText = `¥${tsumoriTotal.toLocaleString()}`;
       const tsumoriListEl = document.getElementById('tsumoriRecent');
@@ -338,14 +351,12 @@
         tsumoriListEl.innerHTML = '<span>我慢できたらボタンを押して記録！</span>';
       }
 
-      // 残高集計
       sortDebts(debts);
       const activeDebts = debts.filter(d => !d.isCleared);
       const clearedDebts = debts.filter(d => d.isCleared);
       const totalBalance = activeDebts.reduce((sum, d) => sum + d.balance, 0);
       document.getElementById('totalDebtBalance').innerText = `¥${totalBalance.toLocaleString()}`;
 
-      // 全体目標計算
       const dispTarget = document.getElementById('displayTargetDate');
       const reqMonthPmt = document.getElementById('requiredMonthlyPmt');
       const remMonthsEl = document.getElementById('monthsRemaining');
@@ -364,7 +375,7 @@
         reqMonthPmt.innerText = '¥0';
       }
 
-      // ボス討伐リスト描画（個別目標つき）
+      // ボスリスト描画（直接返済ボタン付き）
       const priorityList = document.getElementById('debtPriorityList');
       priorityList.innerHTML = '';
       let targetMarked = false;
@@ -382,7 +393,6 @@
         if(hpPercent > 70) hpColor = 'bg-rose-500';
         else if(hpPercent > 30) hpColor = 'bg-amber-500';
 
-        // 個別目標の残り月数＆月額目安
         const indMonths = getRemainingMonths(d.targetMonth);
         let goalBadge = '';
         if (d.targetMonth && indMonths) {
@@ -391,12 +401,6 @@
             <div class="mt-1.5 flex justify-between items-center bg-slate-950/60 p-1.5 rounded border border-slate-700/80 text-[10px]">
               <span class="text-amber-400 font-medium">🎯 目標: ${d.targetMonth} (残り${indMonths}ヶ月)</span>
               <span class="text-slate-300">達成目安: <strong class="text-emerald-400 font-mono">¥${reqIndPmt.toLocaleString()}</strong>/月</span>
-            </div>
-          `;
-        } else {
-          goalBadge = `
-            <div class="mt-1 flex justify-end text-[9px] text-slate-500">
-              <button onclick="toggleSettingsModal(true)" class="underline hover:text-slate-400">＋ 個別目標月を設定する</button>
             </div>
           `;
         }
@@ -416,14 +420,16 @@
           </div>
           <div class="flex justify-between items-center text-[10px]">
             <span class="text-slate-400">金利 <span class="text-amber-400">${d.rate}%</span> | 約定 <span class="text-white">¥${d.minPayment.toLocaleString()}</span></span>
-            <a href="${d.url}" target="_blank" class="bg-indigo-600 hover:bg-indigo-500 text-white px-2 py-0.5 rounded shadow">🔗 ネットバンクへ</a>
+            <div class="flex gap-1.5">
+              <button onclick="openDirectPayModal('${d.id}')" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-2 py-0.5 rounded shadow">⚡ 返済入力</button>
+              <a href="${d.url}" target="_blank" class="bg-indigo-600 hover:bg-indigo-500 text-white px-2 py-0.5 rounded shadow">🔗 銀行へ</a>
+            </div>
           </div>
           ${goalBadge}
         `;
         priorityList.appendChild(row);
       });
 
-      // 殿堂入り
       document.getElementById('memorialCount').innerText = clearedDebts.length;
       const memList = document.getElementById('memorialList');
       memList.innerHTML = '';
@@ -432,7 +438,6 @@
           <span class="text-amber-400 font-bold">🏆 討伐済: ${d.name}</span></div>`;
       });
 
-      // グラフ
       let inc = 0, exp = 0, rep = 0;
       logs.forEach(l => {
         if (l.type === 'income') inc += l.amount;
@@ -528,6 +533,7 @@
       }
     }
 
+    // 配分計算（編集可能なinputタグを出力）
     function calcAllocation() {
       const income = parseInt(document.getElementById('incomeInput').value);
       if (!income || income <= 0) return;
@@ -537,12 +543,12 @@
       const safetyFund = Math.min(30000, Math.max(10000, Math.floor(income * 0.2)));
       let available = Math.max(0, income - safetyFund);
       let alloc = [];
-      let extraPaid = 0;
 
       activeDebts.forEach(d => {
         let req = Math.min(d.balance, d.minPayment);
-        if (available >= req) { alloc.push({ id: d.id, name: d.name, amount: req, extra: false }); available -= req; }
-        else if (available > 0) { alloc.push({ id: d.id, name: d.name, amount: available, extra: false }); available = 0; }
+        if (available >= req) { alloc.push({ id: d.id, name: d.name, amount: req }); available -= req; }
+        else if (available > 0) { alloc.push({ id: d.id, name: d.name, amount: available }); available = 0; }
+        else { alloc.push({ id: d.id, name: d.name, amount: 0 }); }
       });
 
       if (available > 0 && alloc.length > 0) {
@@ -550,47 +556,90 @@
         let ex = alloc.find(a => a.id === t.id);
         let remain = t.balance - (ex ? ex.amount : 0);
         let p = Math.min(remain, available);
-        if(ex) { ex.amount += p; ex.extra = true; } else { alloc.push({ id: t.id, name: t.name, amount: p, extra: true }); }
-        extraPaid = p; available -= p;
+        if(ex) ex.amount += p;
+        available -= p;
       }
 
-      pendingAllocation = { income, alloc };
-
-      let html = `<div class="flex justify-between text-emerald-400 font-bold mb-2 text-[11px]"><span>🛡️ 生活費確保:</span><span>¥${safetyFund.toLocaleString()}</span></div>`;
+      let html = `<div class="flex justify-between text-emerald-400 font-bold mb-2 text-[11px]"><span>🛡️ 手元生活費キープ:</span><span>¥${safetyFund.toLocaleString()}</span></div>`;
       alloc.forEach(a => {
-        let m = a.extra ? '<span class="text-[9px] bg-rose-600 text-white px-1 rounded ml-1">集中撃破!</span>' : '';
-        html += `<div class="flex justify-between items-center text-[11px] mb-1"><span>${a.name} ${m}</span><span class="font-bold font-mono">¥${a.amount.toLocaleString()}</span></div>`;
+        html += `
+          <div class="flex items-center justify-between gap-2 text-[11px] bg-slate-800/80 p-1.5 rounded">
+            <span class="truncate flex-1">${a.name}</span>
+            <div class="flex items-center gap-1 shrink-0">
+              <span class="text-slate-400">¥</span>
+              <input type="number" id="alloc_input_${a.id}" value="${a.amount}" class="w-24 bg-slate-900 border border-slate-600 rounded px-2 py-0.5 text-white font-mono font-bold text-right text-xs focus:border-emerald-400 focus:outline-none">
+            </div>
+          </div>
+        `;
       });
-      if(available > 0) html += `<div class="flex justify-between text-slate-400 text-[11px] mt-2 border-t border-slate-700 pt-1"><span>残りの現金:</span><span>¥${available.toLocaleString()}</span></div>`;
       document.getElementById('allocationItems').innerHTML = html;
-
-      const warp = document.getElementById('warpMessage');
-      if(extraPaid > 0 && activeDebts[0].minPayment > 0) {
-        let m = Math.floor(extraPaid / activeDebts[0].minPayment);
-        if(m > 0) { warp.innerText = `⏳ 目標より約 ${m}ヶ月 短縮！`; warp.classList.remove('hidden'); } else warp.classList.add('hidden');
-      } else warp.classList.add('hidden');
-
       document.getElementById('allocationPreview').classList.remove('hidden');
     }
 
+    // ユーザーが手動調整した金額で返済を実行
     function commitPayment() {
-      if (!pendingAllocation) return;
+      const activeDebts = debts.filter(d => !d.isCleared);
+      let totalPaid = 0;
       let totalSaved = 0;
-      pendingAllocation.alloc.forEach(a => {
-        const t = debts.find(d => d.id === a.id);
-        if (t) {
-          t.balance = Math.max(0, t.balance - a.amount);
-          if(a.extra) totalSaved += Math.floor((a.amount - t.minPayment) * (t.rate / 100));
-          if (t.balance === 0) t.isCleared = true;
+
+      activeDebts.forEach(d => {
+        const inputEl = document.getElementById(`alloc_input_${d.id}`);
+        if (inputEl) {
+          const payAmt = Math.max(0, parseInt(inputEl.value) || 0);
+          if (payAmt > 0) {
+            const actualPay = Math.min(d.balance, payAmt);
+            d.balance -= actualPay;
+            totalPaid += actualPay;
+            if (actualPay > d.minPayment) {
+              totalSaved += Math.floor((actualPay - d.minPayment) * (d.rate / 100));
+            }
+            if (d.balance === 0) d.isCleared = true;
+          }
         }
       });
+
+      if (totalPaid === 0) return alert('返済額が入力されていません。');
+
       savedInterestTotal += totalSaved > 0 ? totalSaved : 0;
-      logs.push({ type: 'repay', amount: pendingAllocation.income });
-      pendingAllocation = null;
+      logs.push({ type: 'repay', amount: totalPaid });
       document.getElementById('incomeInput').value = '';
       document.getElementById('allocationPreview').classList.add('hidden');
       saveStorage();
-      alert('攻撃完了！ターゲット撃破へ前進しました。');
+      alert(`合計 ¥${totalPaid.toLocaleString()} の返済を記録しました！`);
+    }
+
+    // 個別返済モーダル処理
+    function openDirectPayModal(id) {
+      const target = debts.find(d => d.id === id);
+      if (!target) return;
+      directPayTargetId = id;
+      document.getElementById('directPayTitle').innerText = `⚡ ${target.name} へ返済`;
+      document.getElementById('directPayInfo').innerText = `現在の残高: ¥${target.balance.toLocaleString()} (年利: ${target.rate}%)`;
+      document.getElementById('directPayAmount').value = '';
+      toggleDirectPayModal(true);
+      setTimeout(() => document.getElementById('directPayAmount').focus(), 100);
+    }
+    function toggleDirectPayModal(show) {
+      document.getElementById('directPayModal').classList.toggle('hidden', !show);
+    }
+    function commitDirectPay() {
+      const amt = parseInt(document.getElementById('directPayAmount').value);
+      if (!amt || amt <= 0) return alert('金額を正しく入力してください。');
+
+      const target = debts.find(d => d.id === directPayTargetId);
+      if (!target) return;
+
+      const actualPay = Math.min(target.balance, amt);
+      target.balance -= actualPay;
+      if (actualPay > target.minPayment) {
+        savedInterestTotal += Math.floor((actualPay - target.minPayment) * (target.rate / 100));
+      }
+      if (target.balance === 0) target.isCleared = true;
+
+      logs.push({ type: 'repay', amount: actualPay });
+      toggleDirectPayModal(false);
+      saveStorage();
+      alert(`${target.name} へ ¥${actualPay.toLocaleString()} の返済を反映しました！`);
     }
 
     function addExpense() {
@@ -624,7 +673,6 @@
       toggleBorrowModal(false);
     }
 
-    // 設定モーダル（個別目標月の入力欄追加）
     function toggleSettingsModal(show) {
       document.getElementById('settingsModal').classList.toggle('hidden', !show);
       if(show) {
